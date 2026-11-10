@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>어제오늘 날씨</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>어제오늘 날씨</h1>
+    <p class="sub">지역을 정하면 최근 일주일의 일일 날씨를 한눈에 볼 수 있어요.</p>
+  </header>
+
+  <section class="card search">
+    <form id="searchForm" autocomplete="off">
+      <input id="q" type="search" placeholder="지역 검색 (예: 서울, 부산, Tokyo)" aria-label="지역 검색">
+      <button type="submit">검색</button>
+      <button type="button" id="geoBtn" title="현재 위치 사용">📍 내 위치</button>
+    </form>
+    <ul id="results" class="results" hidden></ul>
+    <div class="chips" id="presets"></div>
+  </section>
+
+  <section id="status" class="status" role="status"></section>
+
+  <section id="view" hidden>
+    <div class="head">
+      <div>
+        <h2 id="place"></h2>
+        <p class="muted" id="range"></p>
+      </div>
+      <div class="seg" role="group" aria-label="기간">
+        <button data-days="3">최근 3일</button>
+        <button data-days="7" class="on">최근 7일</button>
+      </div>
+    </div>
+
+    <div class="card chart"><svg id="chart" viewBox="0 0 640 220" role="img" aria-label="일별 기온 그래프"></svg>
+      <div class="legend"><span class="hi">● 최고</span><span class="lo">● 최저</span><span class="rain">▮ 강수량</span></div>
+    </div>
+
+    <div id="days" class="days"></div>
+  </section>
+
+  <footer>데이터: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> · 현지 시간대 기준</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
