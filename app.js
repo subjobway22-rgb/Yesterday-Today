@@ -55,15 +55,24 @@ function choose(p) {
   load();
 }
 
+const inKorea = p => p.lat > 33 && p.lat < 38.7 && p.lon > 124 && p.lon < 132;
+const API = (p, model) => `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}` +
+  `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,precipitation_probability_max` +
+  `&past_days=3&forecast_days=5&timezone=auto` + (model ? `&models=${model}` : '');
+const usable = j => j && j.daily && j.daily.time && j.daily.time.length === 8 &&
+  ['weather_code', 'temperature_2m_max', 'temperature_2m_min'].every(k => j.daily[k] && j.daily[k].every(v => v != null));
+
+async function get(url) { try { const r = await fetch(url); return r.ok ? await r.json() : null; } catch { return null; } }
+
 async function load() {
   status('날씨 불러오는 중…'); $('#view').hidden = true;
-  const u = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}` +
-    `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,precipitation_probability_max` +
-    `&past_days=3&forecast_days=5&timezone=auto`;
-  try {
-    const r = await fetch(u); if (!r.ok) throw 0;
-    data = await r.json(); status(''); render();
-  } catch { status('날씨 정보를 불러오지 못했어요.', true); }
+  let j = null, src = '';
+  if (inKorea(place)) { j = await get(API(place, 'kma_seamless')); src = '기상청(KMA) 모델'; if (!usable(j)) j = null; }
+  if (!j) { j = await get(API(place)); src = 'Open-Meteo 통합 모델'; if (!usable(j)) j = null; }
+  if (!j) return status('날씨 정보를 불러오지 못했어요.', true);
+  // 모델 지정 시 변수명에 접미사가 붙을 수 있어 정규화
+  Object.keys(j.daily).forEach(k => { const m = k.match(/^(.*)_kma_seamless$/); if (m) j.daily[m[1]] = j.daily[k]; });
+  data = j; data.src = src; status(''); render();
 }
 
 const fmt = iso => { const [y, m, d] = iso.split('-').map(Number); const w = '일월화수목금토'[new Date(y, m - 1, d).getDay()]; return `${m}/${d} (${w})`; };
@@ -72,7 +81,7 @@ function rows() {
   const d = data.daily, today = d.time.length - 5; // 인덱스 3 = 오늘
   return d.time.map((t, i) => ({
     date: t, code: d.weather_code[i], hi: d.temperature_2m_max[i], lo: d.temperature_2m_min[i],
-    rain: d.precipitation_sum[i], wind: d.wind_speed_10m_max[i], pop: d.precipitation_probability_max[i],
+    rain: d.precipitation_sum[i] ?? 0, wind: d.wind_speed_10m_max[i] ?? 0, pop: d.precipitation_probability_max ? d.precipitation_probability_max[i] : null,
     off: i - today, fc: i > today }));
 }
 
@@ -81,7 +90,7 @@ function render() {
   const r = rows();
   $('#view').hidden = false;
   $('#place').textContent = place.name;
-  $('#range').textContent = `${fmt(r[0].date)} ~ ${fmt(r[r.length - 1].date)} · 실제 ${r.filter(x => !x.fc).length}일 + 예보 ${r.filter(x => x.fc).length}일`;
+  $('#range').textContent = `${fmt(r[0].date)} ~ ${fmt(r[r.length - 1].date)} · ${data.src} · 실제 ${r.filter(x => !x.fc).length}일 + 예보 ${r.filter(x => x.fc).length}일`;
   $('#days').innerHTML = r.map(x => {
     const [ic, tx] = wmo(x.code);
     const tag = x.off === 0 ? '오늘 · 실제' : x.off === -1 ? '어제 · 실제' : x.off < 0 ? `${-x.off}일 전 · 실제` : x.off === 1 ? '내일 · 예보' : `${x.off}일 후 · 예보`;
