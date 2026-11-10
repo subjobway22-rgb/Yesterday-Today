@@ -36,3 +36,5 @@ footer a{color:inherit}
 svg text{fill:var(--muted);font-size:11px}
 
 .day.fc{background:color-mix(in srgb,var(--accent) 7%,var(--card));border-style:dashed}
+
+.about{margin-top:28px;color:var(--muted);font-size:.9rem}.about h2{font-size:1rem;color:var(--text)}

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://subjobway22-rgb.github.io/Yesterday-Today/sitemap.xml

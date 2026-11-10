@@ -3,7 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>어제오늘 날씨</title>
+<title>어제오늘 날씨 - 지역별 최근 3일 실제 날씨와 4일 예보</title>
+<meta name="description" content="지역을 검색하면 3일 전부터 오늘까지의 실제 날씨와 앞으로 4일 예보를 기온·강수량·바람 그래프로 한눈에 확인하세요. 기상청 모델 기반, 가입 불필요.">
+<meta name="keywords" content="날씨, 지난 날씨, 어제 날씨, 주간 날씨, 일주일 날씨, 일기예보, 지역별 날씨, 기온, 강수량">
+<meta name="theme-color" content="#2f6df6">
+<link rel="canonical" href="https://subjobway22-rgb.github.io/Yesterday-Today/">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="어제오늘 날씨">
+<meta property="og:title" content="어제오늘 날씨 - 최근 3일 실제 날씨와 4일 예보">
+<meta property="og:description" content="지역별 일일 날씨를 지난 3일부터 앞으로 4일까지 한눈에.">
+<meta property="og:url" content="https://subjobway22-rgb.github.io/Yesterday-Today/">
+<meta property="og:image" content="https://subjobway22-rgb.github.io/Yesterday-Today/og.svg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="어제오늘 날씨">
+<meta name="twitter:description" content="지역별 일일 날씨를 지난 3일부터 앞으로 4일까지 한눈에.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"어제오늘 날씨","url":"https://subjobway22-rgb.github.io/Yesterday-Today/","inLanguage":"ko","applicationCategory":"WeatherApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"},"description":"지역별 최근 3일 실제 날씨와 4일 예보를 보여주는 무료 웹앱"}</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -38,6 +54,12 @@
     </div>
 
     <div id="days" class="days"></div>
+  </section>
+
+  <section class="about">
+    <h2>어제오늘 날씨 소개</h2>
+    <p>서울, 부산, 대구, 인천, 광주, 대전, 울산, 제주 등 원하는 지역을 검색하면 지난 3일간의 실제 날씨와 오늘, 앞으로 4일 예보를 한 화면에서 비교할 수 있습니다. 일별 최고·최저기온, 강수량, 강수확률, 최대 풍속을 카드와 그래프로 제공합니다.</p>
+    <noscript><p>이 서비스는 JavaScript가 필요합니다. 브라우저에서 JavaScript를 켜주세요.</p></noscript>
   </section>
 
   <footer>데이터: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> · 현지 시간대 기준</footer>
