@@ -10,8 +10,8 @@ const WMO = {0:['☀️','맑음'],1:['🌤️','대체로 맑음'],2:['⛅','�
   80:['🌦️','소나기'],81:['🌦️','소나기'],82:['⛈️','강한 소나기'],85:['🌨️','눈 소나기'],86:['🌨️','눈 소나기'],95:['⛈️','뇌우'],96:['⛈️','뇌우·우박'],99:['⛈️','뇌우·우박']};
 const wmo = c => WMO[c] || ['❔','알 수 없음'];
 
-let place = null, data = null, days = 7;
-try { days = +localStorage.getItem('days') || 7; place = JSON.parse(localStorage.getItem('place')); } catch {}
+let place = null, data = null;
+try { place = JSON.parse(localStorage.getItem('place')); } catch {}
 
 const status = (msg, err) => { const e = $('#status'); e.textContent = msg || ''; e.className = 'status' + (err ? ' err' : ''); };
 
@@ -49,11 +49,6 @@ $('#geoBtn').onclick = () => {
     () => status('위치 권한이 거부되었어요.', true), { timeout: 10000 });
 };
 
-document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
-  days = +b.dataset.days; try { localStorage.setItem('days', days); } catch {}
-  render();
-});
-
 function choose(p) {
   place = p; try { localStorage.setItem('place', JSON.stringify(p)); } catch {}
   $('#results').hidden = true; $('#q').value = '';
@@ -63,8 +58,8 @@ function choose(p) {
 async function load() {
   status('날씨 불러오는 중…'); $('#view').hidden = true;
   const u = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}` +
-    `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max` +
-    `&past_days=7&forecast_days=1&timezone=auto`;
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,precipitation_probability_max` +
+    `&past_days=3&forecast_days=5&timezone=auto`;
   try {
     const r = await fetch(u); if (!r.ok) throw 0;
     data = await r.json(); status(''); render();
@@ -74,28 +69,26 @@ async function load() {
 const fmt = iso => { const [y, m, d] = iso.split('-').map(Number); const w = '일월화수목금토'[new Date(y, m - 1, d).getDay()]; return `${m}/${d} (${w})`; };
 
 function rows() {
-  const d = data.daily, n = d.time.length, end = n - 1; // 마지막 = 오늘
-  const out = [];
-  for (let i = Math.max(0, end - (days - 1)); i <= end; i++) out.push({
-    date: d.time[i], code: d.weather_code[i], hi: d.temperature_2m_max[i], lo: d.temperature_2m_min[i],
-    rain: d.precipitation_sum[i], wind: d.wind_speed_10m_max[i], ago: end - i });
-  return out;
+  const d = data.daily, today = d.time.length - 5; // 인덱스 3 = 오늘
+  return d.time.map((t, i) => ({
+    date: t, code: d.weather_code[i], hi: d.temperature_2m_max[i], lo: d.temperature_2m_min[i],
+    rain: d.precipitation_sum[i], wind: d.wind_speed_10m_max[i], pop: d.precipitation_probability_max[i],
+    off: i - today, fc: i > today }));
 }
 
 function render() {
   if (!data) return;
-  document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', +b.dataset.days === days));
   const r = rows();
   $('#view').hidden = false;
   $('#place').textContent = place.name;
-  $('#range').textContent = `${fmt(r[0].date)} ~ ${fmt(r[r.length - 1].date)} · 일일 날씨`;
+  $('#range').textContent = `${fmt(r[0].date)} ~ ${fmt(r[r.length - 1].date)} · 실제 ${r.filter(x => !x.fc).length}일 + 예보 ${r.filter(x => x.fc).length}일`;
   $('#days').innerHTML = r.map(x => {
     const [ic, tx] = wmo(x.code);
-    const tag = x.ago === 0 ? '오늘' : x.ago === 1 ? '어제' : `${x.ago}일 전`;
-    return `<div class="day${x.ago === 0 ? ' today' : ''}"><div class="d">${fmt(x.date)}</div><div class="tag">${tag}</div>
+    const tag = x.off === 0 ? '오늘 · 실제' : x.off === -1 ? '어제 · 실제' : x.off < 0 ? `${-x.off}일 전 · 실제` : x.off === 1 ? '내일 · 예보' : `${x.off}일 후 · 예보`;
+    return `<div class="day${x.off === 0 ? ' today' : ''}${x.fc ? ' fc' : ''}"><div class="d">${fmt(x.date)}</div><div class="tag">${tag}</div>
       <div class="ico" aria-hidden="true">${ic}</div><div>${tx}</div>
       <div class="t"><b>${Math.round(x.hi)}°</b> / <span>${Math.round(x.lo)}°</span></div>
-      <div class="m">💧 ${x.rain.toFixed(1)}mm · 💨 ${Math.round(x.wind)}km/h</div></div>`;
+      <div class="m">💧 ${x.rain.toFixed(1)}mm${x.fc && x.pop != null ? ` (${x.pop}%)` : ''} · 💨 ${Math.round(x.wind)}km/h</div></div>`;
   }).join('');
   chart(r);
 }
@@ -109,6 +102,8 @@ function chart(r) {
   const Y = v => T + (mx - v) * (H - T - B) / (mx - mn);
   const bw = Math.min(28, (W - L - R) / n * .5);
   let s = '';
+  const f0 = r.findIndex(x => x.fc);
+  if (f0 > 0) s += `<rect x="${(X(f0 - 1) + X(f0)) / 2}" y="${T - 10}" width="${W - R - (X(f0 - 1) + X(f0)) / 2}" height="${H - B - T + 10}" fill="var(--accent)" opacity=".08"/><text x="${W - R - 4}" y="${T - 2}" text-anchor="end">예보</text>`;
   for (let t = mn; t <= mx; t += Math.max(1, Math.round((mx - mn) / 4)))
     s += `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${L - 6}" y="${Y(t) + 4}" text-anchor="end">${t}°</text>`;
   r.forEach((x, i) => {
@@ -117,7 +112,10 @@ function chart(r) {
     s += `<text x="${X(i)}" y="${H - 24}" text-anchor="middle">${fmt(x.date).split(' ')[0]}</text><text x="${X(i)}" y="${H - 10}" text-anchor="middle">${wmo(x.code)[0]}</text>`;
   });
   const line = (k, c) => {
-    s += `<polyline fill="none" stroke="var(${c})" stroke-width="2.5" points="${r.map((x, i) => X(i) + ',' + Y(x[k])).join(' ')}"/>`;
+    const pts = (a, b) => r.slice(a, b).map((x, i) => X(a + i) + ',' + Y(x[k])).join(' ');
+    const e = f0 < 0 ? r.length : f0;
+    s += `<polyline fill="none" stroke="var(${c})" stroke-width="2.5" points="${pts(0, e)}"/>`;
+    if (f0 > 0) s += `<polyline fill="none" stroke="var(${c})" stroke-width="2.5" stroke-dasharray="6 4" points="${pts(f0 - 1, r.length)}"/>`;
     r.forEach((x, i) => s += `<circle cx="${X(i)}" cy="${Y(x[k])}" r="3.5" fill="var(${c})"/><text x="${X(i)}" y="${Y(x[k]) + (k === 'hi' ? -8 : 15)}" text-anchor="middle">${Math.round(x[k])}°</text>`);
   };
   line('hi', '--hi'); line('lo', '--lo');

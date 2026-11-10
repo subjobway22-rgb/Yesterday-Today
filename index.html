@@ -10,7 +10,7 @@
 <main>
   <header>
     <h1>어제오늘 날씨</h1>
-    <p class="sub">지역을 정하면 최근 일주일의 일일 날씨를 한눈에 볼 수 있어요.</p>
+    <p class="sub">지역을 정하면 3일 전까지의 실제 날씨와 앞으로 4일의 예보를 한눈에 볼 수 있어요.</p>
   </header>
 
   <section class="card search">
@@ -31,14 +31,10 @@
         <h2 id="place"></h2>
         <p class="muted" id="range"></p>
       </div>
-      <div class="seg" role="group" aria-label="기간">
-        <button data-days="3">최근 3일</button>
-        <button data-days="7" class="on">최근 7일</button>
-      </div>
     </div>
 
     <div class="card chart"><svg id="chart" viewBox="0 0 640 220" role="img" aria-label="일별 기온 그래프"></svg>
-      <div class="legend"><span class="hi">● 최고</span><span class="lo">● 최저</span><span class="rain">▮ 강수량</span></div>
+      <div class="legend"><span class="hi">● 최고</span><span class="lo">● 최저</span><span class="rain">▮ 강수량</span><span>▨ 예보</span></div>
     </div>
 
     <div id="days" class="days"></div>

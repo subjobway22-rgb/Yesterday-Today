@@ -34,3 +34,5 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--muted)}
 footer a{color:inherit}
 svg text{fill:var(--muted);font-size:11px}
+
+.day.fc{background:color-mix(in srgb,var(--accent) 7%,var(--card));border-style:dashed}
