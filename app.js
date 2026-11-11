@@ -12,7 +12,7 @@ const ICON = { partly:[96,73,'i-cloud'], sun:[96,104,'i-sun'], cloud:[96,73,'i-c
 const ls = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
 
 let lang = 'ko', T = LANGS.ko, place = null, data = null, lastCat = null;
-const BOT = /bot|crawl|spider|slurp|lighthouse|googleother|bingpreview|facebookexternalhit/i.test(navigator.userAgent);
+const BOT = /bot|crawl|spider|slurp|google|inspection|lighthouse|bingpreview|facebookexternalhit|yeti|naver|daum/i.test(navigator.userAgent);
 const pick = () => {
   if (BOT) return 'ko';
   const s = ls.get('lang'); if (LANGS[s]) return s;
