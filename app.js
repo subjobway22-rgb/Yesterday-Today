@@ -12,7 +12,9 @@ const ICON = { partly:[96,73,'i-cloud'], sun:[96,104,'i-sun'], cloud:[96,73,'i-c
 const ls = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
 
 let lang = 'ko', T = LANGS.ko, place = null, data = null, lastCat = null;
+const BOT = /bot|crawl|spider|slurp|lighthouse|googleother|bingpreview|facebookexternalhit/i.test(navigator.userAgent);
 const pick = () => {
+  if (BOT) return 'ko';
   const s = ls.get('lang'); if (LANGS[s]) return s;
   for (const l of navigator.languages || [navigator.language || 'en']) {
     const p = l.toLowerCase(); if (p.startsWith('ko')) return 'ko'; if (p.startsWith('ja')) return 'ja'; if (p.startsWith('zh')) return 'zh'; if (p.startsWith('en')) return 'en';
@@ -23,15 +25,19 @@ const tpl = (s, n) => s.replace('{n}', n);
 const setStatus = (m, err) => { const e = $('#status'); e.textContent = m || ''; e.className = 'status' + (err ? ' err' : ''); };
 const pname = p => p.k ? T.city[p.k] : (p.my ? T.myPlace : p.name);
 
-function applyLang(l) {
-  lang = l; T = LANGS[l]; ls.set('lang', l);
+function applyLang(l, explicit) {
+  lang = l; T = LANGS[l]; if (explicit) ls.set('lang', l);
   document.documentElement.lang = l === 'zh' ? 'zh-CN' : l;
-  document.title = T.title;
+  // 검색엔진용 메타(제목·설명)는 사용자가 직접 언어를 고른 경우에만 바꾼다 (자동 감지로 바뀌면 색인이 영어로 잡힘)
+  const meta = explicit || ls.get('lang');
+  if (meta) document.title = T.title;
   const set = (sel, a, v) => { const e = document.querySelector(sel); if (e) e.setAttribute(a, v); };
-  set('meta[name=description]', 'content', T.desc);
-  set('meta[property="og:title"]', 'content', T.title); set('meta[property="og:description"]', 'content', T.desc);
-  set('meta[name="twitter:title"]', 'content', T.site); set('meta[name="twitter:description"]', 'content', T.desc);
-  set('meta[property="og:locale"]', 'content', T.og);
+  if (meta) {
+    set('meta[name=description]', 'content', T.desc);
+    set('meta[property="og:title"]', 'content', T.title); set('meta[property="og:description"]', 'content', T.desc);
+    set('meta[name="twitter:title"]', 'content', T.site); set('meta[name="twitter:description"]', 'content', T.desc);
+    set('meta[property="og:locale"]', 'content', T.og);
+  }
   document.querySelectorAll('[data-i18n]').forEach(e => { const v = T[e.dataset.i18n]; if (v != null) e.textContent = v; });
   document.querySelectorAll('[data-i18n-ph]').forEach(e => e.placeholder = T[e.dataset.i18nPh]);
   $('#lang').value = l;
@@ -53,7 +59,7 @@ function say(c) {
   $('#face').src = 'img/face-' + (c ? FACE[c] : 'wink') + '.webp';
 }
 
-$('#lang').addEventListener('change', e => applyLang(e.target.value));
+$('#lang').addEventListener('change', e => applyLang(e.target.value, true));
 
 $('#searchForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -182,4 +188,5 @@ function chart(r) {
 try { place = JSON.parse(ls.get('place')); } catch {}
 if (!place || place.lat == null) place = { k: 'seoul', lat: PRESETS.seoul[0], lon: PRESETS.seoul[1] };
 applyLang(pick());
-load();
+// 검색 봇은 외부 API를 못 불러 오류 문구가 색인되므로 날씨 로딩을 건너뛴다
+if (!BOT) load();
